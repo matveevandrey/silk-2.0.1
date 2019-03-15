@@ -1,5 +1,8 @@
 #define pr_fmt(fmt)	KBUILD_MODNAME ": " fmt
 
+
+#include <linux/time.h>
+#include <linux/delay.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -10,6 +13,14 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Greg Kroah-Hartman and Nate Brune");
 MODULE_DESCRIPTION("A module that protects you from having a terrible horrible no good very bad day.");
+
+//as in /kernel/sys.c:do_sysinfo
+static __kernel_time_t get_uptime(void)
+{
+    struct timespec uptime;
+    get_monotonic_boottime(&uptime);
+    return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
+}
 
 static void panic_time(struct usb_device *usb)
 {
@@ -82,9 +93,13 @@ static void usb_dev_change(struct usb_device *dev)
 {
 	const struct usb_device_id *dev_id;
 
-	/* Check our whitelist to see if we want to ignore this device */
+   /* Check our whitelist to see if we want to ignore this device */
    unsigned long whitelist_len = sizeof(whitelist_table)/sizeof(whitelist_table[0]);
    int i; // GNU89 standard
+
+
+   pr_info("USB dev change notified, device: %x\n",dev->descriptor.idVendor);
+
    for(i = 0; i < whitelist_len; i++)
    {
       dev_id = &whitelist_table[i];
@@ -96,7 +111,13 @@ static void usb_dev_change(struct usb_device *dev)
    }
 
 	/* Not a device we were ignoring, something bad went wrong, panic! */
-	panic_time(dev);
+  if(get_uptime() < 30) {
+        pr_info("Event ignored, grace period\n");
+        return;
+  }
+	
+
+  panic_time(dev);
 }
 
 static int notify(struct notifier_block *self, unsigned long action, void *dev)
@@ -122,8 +143,10 @@ static struct notifier_block usb_notify = {
 
 static int __init silk_init(void)
 {
-	usb_register_notify(&usb_notify);
+//	pr_info("Delaying USB watchdog\n");
+//	mdelay(10000);
 	pr_info("Now watching USB devices...\n");
+	usb_register_notify(&usb_notify);
 	return 0;
 }
 module_init(silk_init);
