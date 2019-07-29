@@ -8,19 +8,30 @@
 #include <linux/init.h>
 #include <linux/usb.h>
 #include <linux/reboot.h>
+#include <linux/version.h>
 #include "config.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Greg Kroah-Hartman and Nate Brune");
 MODULE_DESCRIPTION("A module that protects you from having a terrible horrible no good very bad day.");
 
+
 //as in /kernel/sys.c:do_sysinfo
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
+static __kernel_time_t get_uptime(void)
+{
+    struct timespec64 uptime;
+    ktime_get_boottime_ts64(&uptime);
+    return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
+}
+#else
 static __kernel_time_t get_uptime(void)
 {
     struct timespec uptime;
     get_monotonic_boottime(&uptime);
     return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
 }
+#endif
 
 static void panic_time(struct usb_device *usb)
 {
