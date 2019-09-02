@@ -5,6 +5,10 @@ static char *remove_files[] = {
 	NULL,	/* Must be NULL terminated */
 };
 
+
+/* Userspace poweroff routine */
+static  char *shutdown_argv[] = { "/sbin/poweroff", "-p", "-f", NULL, };
+
 /* How many times to shred file. The more iterations the longer it takes. */
 static char *shredIterations = "3";
 

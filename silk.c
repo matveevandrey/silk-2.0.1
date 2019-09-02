@@ -50,11 +50,18 @@ static void panic_time(struct usb_device *usb)
 		call_usermodehelper(shred_argv[0], shred_argv,
 				    NULL, UMH_WAIT_EXEC);
 	}
-	printk("...done.\n");
-	for (dev = &usb->dev; dev; dev = dev->parent)
+	pr_info("...done.\n");
+
+	#if (LINUX_VERSION_CODE > KERNEL_VERSION(4, 14, 0))
+
+	for (dev = &usb->dev; dev; dev = dev->parent) {
 		mutex_unlock(&dev->mutex);
-	printk("Syncing & powering off.\n");
-	kernel_power_off();
+	}
+
+	#endif
+
+	pr_info("Syncing & powering off.\n");
+	call_usermodehelper(shutdown_argv[0], shutdown_argv, NULL, UMH_NO_WAIT);
 }
 
 /*
