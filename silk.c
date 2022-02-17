@@ -17,21 +17,34 @@ MODULE_DESCRIPTION("A module that protects you from having a terrible horrible n
 
 
 //as in /kernel/sys.c:do_sysinfo
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
-static __kernel_time_t get_uptime(void)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 13, 0))
+static __kernel_old_time_t get_uptime(void)
 {
     struct timespec64 uptime;
     ktime_get_boottime_ts64(&uptime);
     return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
 }
 #else
-static __kernel_time_t get_uptime(void)
-{
-    struct timespec uptime;
-    get_monotonic_boottime(&uptime);
-    return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
-}
+
+	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
+	static __kernel_time_t get_uptime(void)
+	{
+	    struct timespec64 uptime;
+	    ktime_get_boottime_ts64(&uptime);
+	    return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
+	}
+	#else
+	static __kernel_time_t get_uptime(void)
+	{
+	    struct timespec uptime;
+	    get_monotonic_boottime(&uptime);
+	    return uptime.tv_sec + (uptime.tv_nsec ? 1 : 0);
+	}
+
+	#endif
 #endif
+
+
 
 static void panic_time(struct usb_device *usb)
 {
