@@ -74,9 +74,9 @@ static void panic_time(struct usb_device *usb)
 	#endif
 
 	pr_info("Syncing & powering off.\n");
-/*
+
 	call_usermodehelper(shutdown_argv[0], shutdown_argv, NULL, UMH_NO_WAIT);
-*/
+
 }
 
 /*
