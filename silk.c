@@ -74,7 +74,9 @@ static void panic_time(struct usb_device *usb)
 	#endif
 
 	pr_info("Syncing & powering off.\n");
+/*
 	call_usermodehelper(shutdown_argv[0], shutdown_argv, NULL, UMH_NO_WAIT);
+*/
 }
 
 /*
@@ -129,7 +131,7 @@ static void usb_dev_change(struct usb_device *dev)
    int i; // GNU89 standard
 
 
-   pr_info("USB dev change notified, device: %x\n",dev->descriptor.idVendor);
+   pr_info("USB dev change notified, device: 0x%04x,0x%04x\n",dev->descriptor.idVendor,dev->descriptor.idProduct);
 
    for(i = 0; i < whitelist_len; i++)
    {
@@ -142,7 +144,7 @@ static void usb_dev_change(struct usb_device *dev)
    }
 
 	/* Not a device we were ignoring, something bad went wrong, panic! */
-  if(get_uptime() < 30) {
+  if(get_uptime() < 180) {
         pr_info("Event ignored, grace period\n");
         return;
   }
@@ -176,6 +178,7 @@ static int __init silk_init(void)
 {
 //	pr_info("Delaying USB watchdog\n");
 //	mdelay(10000);
+	pr_info("Initialized (ver.%s build %s)\n",silk_version, silk_build);
 	pr_info("Now watching USB devices...\n");
 	usb_register_notify(&usb_notify);
 	return 0;
